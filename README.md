@@ -1,6 +1,9 @@
 # tufts-lean-seminar
 
-Lean 4 / Mathlib project for the Tufts Lean seminar.
+Lean 4 / Mathlib project for the 
+  [Fall 2026 Tufts Lean seminar](https://gmcninch.math.tufts.edu/pages/2026-Fall---lean-seminar.html).
+
+
 
 ## Setup
 
