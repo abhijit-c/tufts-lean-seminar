@@ -19,14 +19,10 @@ import Mathlib.Tactic
    
    -/
 
-
 open Set
 
 variable {α β : Type*}
 
-example (p q : α → Prop) (h : (s : α) → p s → q s)
-    : { s | p s } ⊆ { s | q s }   := by 
-  sorry
 
 /- 
 Theme: a statement about sets is a statement of logic in disguise,
@@ -58,7 +54,7 @@ Once you have a proof by hand, feel free to see what `aesop` or
 -/
 
 
-/-! ## Warm-up: membership is just the predicate -/
+/-  ## intro membership is just the predicate -/
 
 example (p : α → Prop) (a : α) : a ∈ {x | p x} ↔ p a := Iff.rfl
 
@@ -70,13 +66,21 @@ example (A B : Set α) : A ⊆ B ↔ ∀ x, x ∈ A → x ∈ B := Iff.rfl
 
 example : (Set.univ : Set α) = {x | True} := rfl
 
+example (p q : α → Prop) (h : (s : α) → p s → q s)
+    : { s | p s } ⊆ { s | q s }   := by 
+  sorry
+
 -- Worked example.  Read it, step through it, see how the goal changes.
 example (A B : Set α) : A ∩ B ⊆ A := by
   intro x hx
   rcases hx with ⟨ha,hb⟩
   exact ha
 
-/-! ## Act 1: subsets are `∀` (`intro`) -/
+
+/-! =======================================================================
+    Part 1: subsets are `∀` (`intro`) 
+    =======================================================================
+-/
 
 example (A B : Set α) : A ⊆ A ∪ B := by
   sorry
@@ -101,7 +105,11 @@ example (A B C : Set α) (hA : A ⊆ C) (hB : B ⊆ C) : A ∪ B ⊆ C := by
 example (A B C : Set α) : (A \ B) \ C ⊆ A \ (B ∪ C) := by
   sorry
 
-/-! ## Act 2: equality is two inclusions (use `ext`, `constructor`) -/
+
+/-  =======================================================================
+    Part 2: equality is two inclusions (use `ext`, `constructor`)
+    =======================================================================
+-/
 
 -- Worked example.
 example (A B : Set α) : A ∩ B = B ∩ A := by
@@ -130,14 +138,26 @@ example (A B : Set α) : (A ∩ B)ᶜ = Aᶜ ∪ Bᶜ := by
 example (A B : Set α) : A ⊆ B ↔ A ∩ B = A := by
   sorry
 
+
 /-! ## Act 3: functions enter (`⁻¹'` and `''`) -/
 
 variable (f : β → α)
 
--- Hint: is this even a `rfl`?
-example (A B : Set α) : f ⁻¹' (A ∩ B) = f ⁻¹' A ∩ f ⁻¹' B := by
-  sorry
+/- for `X : Set α`, we get the pre-image `f⁻¹'(X) : Set β`.
 
+   And for `Y : Set β`, we get the image `f''(Y) : Set α`.
+   
+-/   
+
+-- Hint: The next three actually are true by definition. One says that
+-- that the terms in the equalities are `defeq`
+-- so you can solve them with `rfl`
+
+example (A B : Set α) : f ⁻¹' (A ∩ B) = f ⁻¹' A ∩ f ⁻¹' B := rfl
+
+-- by
+--   sorry
+  
 example (A B : Set α) : f ⁻¹' (A ∪ B) = f ⁻¹' A ∪ f ⁻¹' B := by
   sorry
 
@@ -145,9 +165,19 @@ example (A : Set α) : f ⁻¹' Aᶜ = (f ⁻¹' A)ᶜ := by
   sorry
 
 -- Membership in an image is existential: `y ∈ f '' S ↔ ∃ x, x ∈ S ∧ f x = y`.
--- So: `obtain ⟨x, hx, rfl⟩` to use it, `⟨x, hx, rfl⟩` or `use x` to prove it.
+-- So: `rcases ⟨x, hx, rfl⟩` to use it, `⟨x, hx, rfl⟩` or `use x` to prove it.
 example (S T : Set β) : f '' (S ∪ T) = f '' S ∪ f '' T := by
-  sorry
+  ext y
+  constructor
+  · rintro ⟨x,hx,rfl⟩
+    rcases hx with hxs | hxt 
+    · apply Or.inl
+      exact mem_image_of_mem f hxs 
+    · apply Or.inr
+      exact mem_image_of_mem f hxt 
+  · rintro (⟨y,hy,rfl⟩  | ⟨y,hy,rfl⟩)
+    · exact ⟨y,Or.inl hy, rfl⟩
+    · exact ⟨y,Or.inr hy, rfl⟩
 
 example (S T : Set β) : f '' (S ∩ T) ⊆ f '' S ∩ f '' T := by
   sorry
