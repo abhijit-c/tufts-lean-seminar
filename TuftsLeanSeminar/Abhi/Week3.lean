@@ -45,7 +45,27 @@ variable {α β : Type*}
 -- inclusion you proved in class; the other is where injectivity gets used.
 example (f : β → α) :
     Function.Injective f ↔ ∀ S T : Set β, f '' (S ∩ T) = f '' S ∩ f '' T := by
-  sorry
+  constructor
+  -- → f injective → [f '' (S ∩ T) = f '' S ∩ f '' T]
+  · intro hf S T
+    ext y
+    constructor
+    -- ⊆: holds for any f
+    · rintro ⟨x, ⟨hxS, hxT⟩, rfl⟩
+      exact ⟨⟨x, hxS, rfl⟩, ⟨x, hxT, rfl⟩⟩
+    -- ⊇: f x₂ = f x₁ forces x₂ = x₁ by injectivity
+    · rintro ⟨⟨x₁, hx₁S, rfl⟩, ⟨x₂, hx₂T, h⟩⟩
+      have hx : x₂ = x₁ := hf h
+      rw [hx] at hx₂T
+      exact ⟨x₁, ⟨hx₁S, hx₂T⟩, rfl⟩
+  --  ← [f '' (S ∩ T) = f '' S ∩ f '' T] → f injective
+  · intro h x y hxy
+    have hmem : f x ∈ f '' {x} ∩ f '' {y} :=
+      ⟨⟨x, mem_singleton x, rfl⟩, ⟨y, mem_singleton y, hxy.symm⟩⟩
+    rw [← h] at hmem
+    obtain ⟨z, ⟨hzx, hzy⟩, hfzeqfx⟩ := hmem
+    rw [mem_singleton_iff] at hzx hzy
+    rw [← hzx, hzy]
 
 /-! ## Example -/
 
@@ -54,4 +74,4 @@ example (f : β → α) :
 -- the right side; here that point is `0`.
 example : ∃ (g : ℕ → ℕ) (S T : Set ℕ),
     ¬ (g '' S ∩ g '' T ⊆ g '' (S ∩ T)) := by
-  sorry
+      sorry
