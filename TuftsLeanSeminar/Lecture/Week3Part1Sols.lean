@@ -19,41 +19,52 @@ Usually: the outermost quantifier tells you the tactic you should use.
 /- first a quick example of the `apply` tactic  -/
 
 example (p q r s : Prop) (x : p) (f : p ∨ q → r) (g : q ∨ r → s) : s := by
-  sorry
+  apply g
+  apply Or.inr 
+  apply f
+  apply Or.inl
+  exact x
 
 /-! ## proving a `∀` statement -/
 
 -- use `intro` to turn the goal `∀ n, ...` into a goal about a single (arbitrary) `n`.
 
 example : ∀ n : ℕ, n + 0 = n := by
-  sorry
+  intro n
+  exact Nat.add_eq_left.mpr rfl  -- use `apply?` to get help finding the required Lemma to 
+                                 -- close the goal.
 
 /-! ## Using a `∀` hypothesis -/
 
 -- A hypothesis `h : ∀ t, P t` is literally a function: `h: (a:t) → P a`.
 -- No tactic needed to "apply" it, just apply it like a function.
 example (t : Type) (x0 : t) (P : t → Prop) (h : ∀ x, P x) : P x0 := by
-  sorry 
+  exact h x0
 
 /-! ## proving an `∃` statement -/
 
 -- `use` lets you supply the witness directly; you'll then need to supply the required proof.
-example : ∃ n : ℕ, n > 3 := 
-  sorry 
-
+example : ∃ n : ℕ, n > 3 := by
+  use 4
+  norm_num -- the norm_num tactic can give proofs for numerical inequalities
+  
+  
 /-! ## Using an `∃` hypothesis -/
-
 
 -- use `rcases` to "unpack" a `∃` hypothesis; remember that in this
 -- case `rcases` will return a value together with a proof. The syntax
 -- is `rcases h with ⟨x,hx⟩`.
 example (P : ℕ → Prop) (h : ∃ n, P n) : ∃ n, P n ∨ n = 0 := by
-  sorry 
+  rcases h with ⟨x₀,hx₀⟩ 
+  use x₀
+  exact Or.inl hx₀
 
 /-! ## ★ Negating a quantifier -/
 
 example (P : ℕ → Prop) (h : ∃ n, ¬ P n) : ¬ ∀ n, P n := by
-  sorry
+  intro k
+  rcases h with ⟨n₀,hn₀⟩ 
+  exact absurd (k n₀) hn₀ 
   
 -- Classically, `¬∀` and `∃¬` say the same thing. 
 -- This uses "classical logic" -- i.e. the law of excluded middle. Frequently, this boils down
@@ -71,7 +82,9 @@ example (P : ℕ → Prop) (h : ¬ ∀ n, P n) : ∃ n, ¬ P n := by
 
 -- This is the shape you'll see constantly in elementary analysis statements.
 example : ∀ n : ℕ, ∃ m : ℕ, m > n := by  
-  sorry
+  intro n
+  use n+1
+  exact lt_add_one n
   
   -- after you produce a natural number to `use` to satisfy the existentially quantified goal,
   -- try  using the `apply?` to ask for a hint for completing the proof.
