@@ -23,6 +23,8 @@ open Set
 
 variable {α β : Type*}
 
+#check {n : ℕ | n > 3}
+
 
 /- 
 Theme: a statement about sets is a statement of logic in disguise,
@@ -68,13 +70,17 @@ example : (Set.univ : Set α) = {x | True} := rfl
 
 example (p q : α → Prop) (h : (s : α) → p s → q s)
     : { s | p s } ⊆ { s | q s }   := by 
-  sorry
+    rintro x hx
+    apply h
+    exact hx
 
 -- Worked example.  Read it, step through it, see how the goal changes.
 example (A B : Set α) : A ∩ B ⊆ A := by
-  intro x hx
-  rcases hx with ⟨ha,hb⟩
+  rintro x ⟨ha, hb⟩
   exact ha
+  -- intro x hx
+  -- rcases hx with ⟨ha,hb⟩
+  -- exact ha
 
 
 /-! =======================================================================
