@@ -345,7 +345,16 @@ example : ∃ (g : ℕ → ℕ) (S T : Set ℕ),
 /-! ## Capstone: image and preimage are adjoint -/
 
 example (S : Set β) (B : Set α) : f '' S ⊆ B ↔ S ⊆ f ⁻¹' B := by
-  sorry
+  constructor
+  · rintro h₁ s _
+    apply h₁ 
+    use s 
+  · rintro hS x ⟨s,hs,rfl⟩
+    exact hS hs
+    
+
+    
+  
 
 -- ★★ Injectivity, characterized by a property of sets.
 -- Hint for `←`: given `f x = f y`, apply the hypothesis to `S = {x}`, `T = {y}`,
