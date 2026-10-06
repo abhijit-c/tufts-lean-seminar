@@ -2,7 +2,40 @@ import Mathlib.Tactic
 
 
 /-!
-# Lean seminar: proving elementary set-theoretic statements 
+# Tufts Lean seminar: Week 4
+-/
+
+-- Recall las week we proved the following, and I said it used "classical" math
+-- i.e. law of the excluded middle
+example (P : ℕ → Prop) (h : ¬ ∀ n, P n) : ∃ n, ¬ P n := by
+  by_contra h'
+  apply h
+  intro x
+  by_contra h''
+  exact h' ⟨x,h''⟩ 
+
+-- you can use the `#print axioms` command to see what axioms a particular construction depends on
+-- But: that construction needs to have a *name*. So let's restate the above example:
+
+lemma negation (P : ℕ → Prop) (h : ¬ ∀ n, P n) : ∃ n, ¬ P n := by
+  by_contra h'
+  apply h
+  intro x
+  by_contra h''
+  exact h' ⟨x,h''⟩ 
+
+#print axioms negation 
+-- Messages here:
+-- 27:0:
+-- 'negation' depends on axioms: [propext, Classical.choice, Quot.sound]
+
+-- basically everything that was used here was already used by "excluded middle"
+#print axioms Classical.em
+#check Classical.em
+
+
+/-!
+# proving elementary set-theoretic statements 
 -/
 
 /- a predicate on a type `α : Type` is just a function
@@ -82,17 +115,28 @@ example (A B : Set α) : A ∩ B ⊆ A := by
     =======================================================================
 -/
 
-example (A B : Set α) : A ⊆ A ∪ B := by
+theorem my_inter_sub_left (A B : Set α) : A ∩ B ⊆ A := by
   sorry
 
-example (A B : Set α) : A ∩ B ⊆ B := by
+theorem my_sub_union_left (A B : Set α) : A ⊆ A ∪ B := by
   sorry
 
+theorem my_sub_trans (A B C : Set α) (hAB : A ⊆ B) (hBC : B ⊆ C) : A ⊆ C := by
+  sorry
+  
+-- let's prove `A ∩ B ⊆ A ∪ B` using our intermediate results
+
+-- first, as a term without using tactics
+example (A B : Set α) : A ∩ B ⊆ A ∪ B := 
+  sorry
+  
+-- second, in tactics mode using `have`
 example (A B : Set α) : A ∩ B ⊆ A ∪ B := by
   sorry
 
-example (A B C : Set α) (hAB : A ⊆ B) (hBC : B ⊆ C) : A ⊆ C := by
-  sorry
+-- third, in tactics mode using `apply`
+example (A B : Set α) : A ∩ B ⊆ A ∪ B := by
+  sorry  
 
 example (A B C : Set α) (hB : A ⊆ B) (hC : A ⊆ C) : A ⊆ B ∩ C := by
   sorry

@@ -2,7 +2,41 @@ import Mathlib.Tactic
 
 
 /-!
-# Lean seminar: proving elementary set-theoretic statements 
+# Tufts Lean seminar: Week 4
+-/
+
+-- Recall las week we proved the following, and I said it used "classical" math
+-- i.e. law of the excluded middle
+example (P : ℕ → Prop) (h : ¬ ∀ n, P n) : ∃ n, ¬ P n := by
+  by_contra h'
+  apply h
+  intro x
+  by_contra h''
+  exact h' ⟨x,h''⟩ 
+
+-- you can use the `#print axioms` command to see what axioms a particular construction depends on
+-- But: that construction needs to have a *name*. So let's restate the above example:
+
+lemma negation (P : ℕ → Prop) (h : ¬ ∀ n, P n) : ∃ n, ¬ P n := by
+  by_contra h'
+  apply h
+  intro x
+  by_contra h''
+  exact h' ⟨x,h''⟩ 
+
+#print axioms negation 
+-- Messages here:
+-- 27:0:
+-- 'negation' depends on axioms: [propext, Classical.choice, Quot.sound]
+
+-- basically everything that was used here was already used by "excluded middle"
+#print axioms Classical.em
+#check Classical.em
+
+
+
+/-!
+# proving elementary set-theoretic statements 
 -/
 
 /- a predicate on a type `α : Type` is just a function
@@ -83,25 +117,40 @@ example (A B : Set α) : A ∩ B ⊆ A := by
     =======================================================================
 -/
 
-example (A B : Set α) : A ⊆ A ∪ B := by
+theorem my_inter_sub_left (A B : Set α) : A ∩ B ⊆ A := by
+  rintro x ⟨ha,_⟩
+  exact ha
+
+theorem my_sub_union_left (A B : Set α) : A ⊆ A ∪ B := by
   rintro _ ha
   apply Or.inl
   exact ha
 
-example (A B : Set α) : A ∩ B ⊆ B := by
-  rintro x ⟨ha,hb⟩
-  exact hb
-
-example (A B : Set α) : A ∩ B ⊆ A ∪ B := by
-  rintro x ⟨ha,_⟩
-  apply Or.inl
-  exact ha
-
-example (A B C : Set α) (hAB : A ⊆ B) (hBC : B ⊆ C) : A ⊆ C := by
+theorem my_sub_trans (A B C : Set α) (hAB : A ⊆ B) (hBC : B ⊆ C) : A ⊆ C := by
   rintro _ ha
   apply hBC 
   apply hAB
   exact ha
+
+-- let's prove `A ∩ B ⊆ A ∪ B` using our intermediate results
+
+-- first, as a term without using tactics
+example (A B : Set α) : A ∩ B ⊆ A ∪ B := 
+  my_sub_trans _ _ _ (my_inter_sub_left _ _) (my_sub_union_left _ _)
+
+-- second, in tactics mode using `have`
+example (A B : Set α) : A ∩ B ⊆ A ∪ B := by
+  have h1 : A ∩ B ⊆ A := my_inter_sub_left _ _
+  have h2 : A ⊆ A ∪ B := my_sub_union_left _ _
+  exact my_sub_trans _ _ _ h1 h2
+
+
+-- third, in tactics mode using `apply`
+example (A B : Set α) : A ∩ B ⊆ A ∪ B := by
+  apply my_sub_trans _ _ _
+  · exact my_inter_sub_left A B
+  · exact my_sub_union_left A B
+  
 
 example (A B C : Set α) (hB : A ⊆ B) (hC : A ⊆ C) : A ⊆ B ∩ C := by
   rintro a ha
@@ -339,8 +388,6 @@ example : ∃ (g : ℕ → ℕ) (S T : Set ℕ),
   rcases h ⟨⟨0,rfl,rfl⟩, ⟨1,rfl,rfl⟩⟩ with ⟨n,⟨hn0,hn1⟩,_⟩
   have : 0 = 1 := hn0.symm.trans hn1
   exact absurd this (by decide)
-  
-  
 
 /-! ## Capstone: image and preimage are adjoint -/
 
@@ -351,13 +398,38 @@ example (S : Set β) (B : Set α) : f '' S ⊆ B ↔ S ⊆ f ⁻¹' B := by
     use s 
   · rintro hS x ⟨s,hs,rfl⟩
     exact hS hs
-    
-
-    
-  
 
 -- ★★ Injectivity, characterized by a property of sets.
 -- Hint for `←`: given `f x = f y`, apply the hypothesis to `S = {x}`, `T = {y}`,
 -- and show `f x ∈ f '' {x} ∩ f '' {y}`.
 example : Function.Injective f ↔ ∀ S T : Set β, f '' (S ∩ T) = f '' S ∩ f '' T := by
-  sorry
+  constructor
+  · rintro h S T 
+    ext x
+    constructor
+    · rintro ⟨u,⟨hus,hut⟩,rfl⟩
+      constructor
+      <;> use u
+    · rintro ⟨⟨s,hxs,kxs⟩,⟨t,hxt,kxt⟩⟩
+      have l : s = t := h (kxs.trans kxt.symm)
+      subst l
+      use s
+      exact ⟨⟨hxs,hxt⟩,kxs⟩
+  · rintro h 
+    intro x y k
+    by_contra hxy
+    let S : Set β := { x }
+    let T : Set β := { y }
+    have : { x } ∩ { y } = (∅:Set β) := by 
+      exact singleton_inter_of_notMem hxy
+    have hSTempty : ∅ = f '' S ∩ f '' T := by
+      rw [ ← h S T ]
+      unfold S T
+      rw [ this ]
+      exact empty_eq_image.mpr rfl 
+    sorry
+      
+  
+      
+      
+          
