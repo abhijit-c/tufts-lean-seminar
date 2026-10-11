@@ -363,36 +363,114 @@ example {X : Type*} [MetricSpace X] (x : X) :
 #check @InnerProductSpace
 #check @CompleteSpace
 
-/-! ## 7. Coercions and decidability (brief) -/
 
--- `(n : ℝ)` for `n : ℕ` is also found by instance search (class `NatCast`).
-#check ((3 : ℕ) : ℝ)
+/-! ## 8. Structure on a type constructor: `Functor` -/
 
-example (n : ℕ) : dist (n : ℝ) 0 = n := by simp
+-- So far a class was structure on a type `X`. Here it is structure on a
+-- type *constructor* `F : Type → Type`.
+#check (Functor : (Type → Type) → Type 1)
+#check @Functor.map    -- (α → β) → F α → F β
 
--- Decidability: a class that connects back to the logic part of the seminar.
+#eval (· + 1) <$> [1, 2, 3]               -- [2, 3, 4]
+#eval (· + 1) <$> some 5                  -- some 6
+#eval (· + 1) <$> (none : Option Nat)     -- none
 
-
-#eval decide (3 < 5)
-#synth Decidable (3 < 5)
-#eval if 3 < 5 then "yes" else "no"
-
-
-/-! ## functors -/
-
-#check @Functor.map      -- (α → β) → F α → F β
-
-#eval (· + 1) <$> [1, 2, 3]       -- [2, 3, 4]
-#eval (· + 1) <$> some 5          -- some 6
-#eval (· + 1) <$> (none : Option Nat)   -- none
+-- Now let's define a binary tree data type -- really a type transformer! 
 
 inductive MyTree (α : Type) where
   | leaf : MyTree α
   | node : MyTree α → α → MyTree α → MyTree α
+deriving Repr
+
+-- We would like to be able to use `Functor.map` for data of type `MyTree`.
+
+-- Let's examine the `Functor` typeclass to see what is required to 
+-- define an instance
+
+#print Functor
+
+/- We see:
+
+class Functor.{u, v} (f : Type u → Type v) : Type (max (u + 1) v)
+number of parameters: 1
+fields:
+  Functor.map : {α β : Type u} → (α → β) → f α → f β
+  Functor.mapConst : {α β : Type u} → α → f β → f α :=
+    fun {α β} ↦ Functor.map ∘ Function.const β
+constructor:
+  Functor.mk.{u, v} {f : Type u → Type v} (map : {α β : Type u} → (α → β) → f α → f β)
+    (mapConst : {α β : Type u} → α → f β → f α) : Functor f
+ 
+Note that Functor.mapConst is (by default) defined in terms of Functor.map, so we aren't 
+required to implement that field to define an instance.
+-/
 
 def MyTree.map {α β : Type} (f : α → β) : MyTree α → MyTree β
-  | .leaf => .leaf
+  | .leaf => .leaf 
   | .node l a r => .node (l.map f) (f a) (r.map f)
 
 instance : Functor MyTree where
   map := MyTree.map
+
+def testMyTree : MyTree String :=
+.node (.node (.node .leaf "Jim" .leaf) "Fred"
+  (.node .leaf "Sheila" .leaf)) "Alice"
+  (.node .leaf "Bob" (.node .leaf "Eve" .leaf))
+
+#eval testMyTree
+
+#eval testMyTree.map String.toLower
+
+-- or equivalently 
+
+#eval String.toLower <$> testMyTree
+
+/-! `Functor` only asks for `map`. The functor *laws* live in a second class. -/
+
+#print LawfulFunctor    -- id_map, comp_map (and a technical map_const)
+
+/- 
+class LawfulFunctor.{u, v} (f : Type u → Type v) [Functor f] : Prop
+number of parameters: 2
+fields:
+  LawfulFunctor.map_const : ∀ {α β : Type u}, Functor.mapConst = Functor.map ∘ Function.const β
+  LawfulFunctor.id_map : ∀ {α : Type u} (x : f α), id <$> x = x
+  LawfulFunctor.comp_map : ∀ {α β γ : Type u} (g : α → β) (h : β → γ) (x : f α), 
+    (h ∘ g) <$> x = h <$> g <$> x
+constructor:
+  LawfulFunctor.mk.{u, v} {f : Type u → Type v} [Functor f]
+    (map_const : ∀ {α β : Type u}, Functor.mapConst = Functor.map ∘ Function.const β)
+    (id_map : ∀ {α : Type u} (x : f α), id <$> x = x)
+    (comp_map : ∀ {α β γ : Type u} (g : α → β) (h : β → γ) (x : f α), 
+      (h ∘ g) <$> x = h <$> g <$> x) : LawfulFunctor f
+
+-/
+
+
+theorem MyTree.map_id {α : Type} (t : MyTree α) : t.map id = t := by
+  induction t with
+  | leaf => rfl
+  | node l a r ihl ihr => simp [MyTree.map, ihl, ihr]
+
+theorem MyTree.map_comp {α β γ : Type} (g : α → β) (h : β → γ) (t : MyTree α) :
+    t.map (h ∘ g) = (t.map g).map h := by
+  induction t with
+  | leaf => rfl
+  | node l a r ihl ihr => simp [MyTree.map, ihl, ihr]
+
+instance : LawfulFunctor MyTree where
+  map_const := rfl
+  id_map := MyTree.map_id
+  comp_map := MyTree.map_comp
+
+-- Why the laws are worth stating: this is a perfectly legal `Functor` instance.
+structure Twice (α : Type) where
+  a : α
+  b : α
+
+instance : Functor Twice where
+  map f t := ⟨f t.a, f t.a⟩
+
+-- But for this "functor", mapping the identity does not behave as expected.
+
+#eval (id <$> Twice.mk 1 2).b    -- 1, not 2: `map id ≠ id`, so no `LawfulFunctor`
