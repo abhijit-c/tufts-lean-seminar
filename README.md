@@ -4,6 +4,11 @@ Lean 4 / Mathlib project for the
   [Fall 2026 Tufts Lean seminar](https://gmcninch.math.tufts.edu/pages/2026-Fall---lean-seminar.html).
 
 
+## Materials for the seminar
+
+- [Lecture 3 - propositions and predicates](/TuftsLeanSeminar/Lecture/Week3Sols.lean)
+- [Lecture 4 - how mathlib handles sets](/TuftsLeanSeminar/Lecture/Week4Sols.lean)
+- [Lecture 5 - typeclasses](/TuftsLeanSeminar/Lecture/Week5TypeClassesFull.lean)
 
 ## Setup
 
