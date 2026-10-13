@@ -151,8 +151,7 @@ example (x y : ℝ) (h : realMetric.mdist x y + 1 ≤ 3) :
     ball realMetric y 1 ⊆ ball realMetric x 3 :=
   ball_subset realMetric h
 
-/-! ## 3. The friction
-
+/-! 
 It works, but:
 * every statement carries `d.mdist` where `d` is the "metric space structure on `X`";
   there is no plain `dist x y` notation;
@@ -257,14 +256,6 @@ example (x y : ℝ × ℝ) (h : mdist x y + 1 ≤ 3) :
   ball_subset₁ h
 
 
--- Unwinding `⊆`: points within 1 of y are within 3 of x.  (Here `fun hz => ...`
--- supplies the point-membership argument that `⊆` is waiting for.)
-example (x y : ℝ) (h : mdist x y + 1 ≤ 3) :
-    ∀ z, mdist y z < 1 → mdist x z < 3 := by
-  intro z
-  rw [ ← mem_ball₁ y z 1, ← mem_ball₁ x z 3 ]
-  exact (fun hz => (ball_subset₁ h hz))
-
 -- A definition that mentions two spaces, with no metric arguments in sight.
 def MyContinuousAt' {X Y : Type} [MyMetricSpace X] [MyMetricSpace Y]
     (f : X → Y) (x : X) : Prop :=
@@ -323,21 +314,29 @@ variable (n : ℕ) in
 #synth MetricSpace ℕ
 #synth MetricSpace ℚ
 
-theorem my_ball_subset {X : Type*} [MetricSpace X] {x y : X} {r s : ℝ}
-    (h : dist x y + s ≤ r) :
-    Metric.ball y s ⊆ Metric.ball x r := by
-  intro z hz
-  rw [Metric.mem_ball] at hz ⊢
-  calc dist z x ≤ dist z y + dist y x := dist_triangle _ _ _
-    _ < s + dist y x := by linarith
-    _ ≤ r := by rw [dist_comm y x]; linarith
+def ball₂ {X : Type} [MetricSpace X] (x : X) (r : ℝ) : Set X :=
+  { z : X | dist x z < r }
 
-#check @my_ball_subset ℝ
-#check @my_ball_subset ℂ
-#check @my_ball_subset (ℝ × ℝ)
+theorem mem_ball₂ {X : Type} [MetricSpace X] (x z : X) (r : ℝ) :
+  z ∈ ball₂ x r ↔ dist x z < r := Iff.rfl
+
+
+-- somewhat less cluttered statement and proof
+theorem ball_subset₂ {X : Type} [MetricSpace X] {x y : X} {r s : ℝ}
+    (h : dist x y + s ≤ r) :
+  ball₂ y s ⊆ ball₂ x r := by
+    intro z hz
+    rw [ mem_ball₂ ] at hz ⊢
+    have h1 := dist_triangle x y z
+    linarith
+
+
+#check @ball_subset₂ ℝ
+#check @ball_subset₂ ℂ
+#check @ball_subset₂ (ℝ × ℝ)
 
 variable (n : ℕ) in
-  #check @my_ball_subset (Fin n → ℝ)
+  #check @ball_subset₂ (Fin n → ℝ)
 
 -- A failure that is mathematics: unbounded functions have no sup metric, so there
 -- is no `MetricSpace` instance on `ℝ → ℝ`.
