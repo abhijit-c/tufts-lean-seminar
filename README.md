@@ -9,6 +9,7 @@ Lean 4 / Mathlib project for the
 - [Lecture 3 - propositions and predicates](/TuftsLeanSeminar/Lecture/Week3Sols.lean)
 - [Lecture 4 - how mathlib handles sets](/TuftsLeanSeminar/Lecture/Week4Sols.lean)
 - [Lecture 5 - typeclasses](/TuftsLeanSeminar/Lecture/Week5TypeClassesFull.lean)
+- [Lecture 6 - Filters in Mathlib](/TuftsLeanSeminar/Lecture/Week6.lean)
 
 ## Setup
 
